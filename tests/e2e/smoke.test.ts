@@ -76,4 +76,26 @@ test.describe('Warband builder flow', () => {
     // Should show at least one hero position card (Captain)
     await expect(page.getByText('Captain')).toBeVisible({ timeout: 5000 })
   })
+
+  // Verify each of the 6 newly-seeded factions shows heroes in the builder
+  const factionLeaders: [string, string][] = [
+    ['Marienburg Merchants', 'Merchant'],
+    ['Middenheim Mercenaries', 'Champion of Ulric'],
+    ['Witch Hunters', 'Witch Hunter Captain'],
+    ['Orcs & Goblins', 'Orc Boss'],
+    ['Cult of the Possessed', 'Magister'],
+    ['Beastmen Raiders', 'Beastman Shaman'],
+  ]
+
+  for (const [faction, leader] of factionLeaders) {
+    test(`heroes step for ${faction} shows ${leader}`, async ({ page }) => {
+      await page.goto('/warbands/new')
+      await page.getByText(faction, { exact: true }).click()
+      await expect(page.getByText(/name your warband/i)).toBeVisible({ timeout: 5000 })
+      await page.getByLabel(/warband name/i).fill('Test Warband')
+      await page.getByRole('button', { name: 'Next →' }).click()
+      await expect(page.getByText(/hire your heroes/i)).toBeVisible({ timeout: 5000 })
+      await expect(page.getByText(leader, { exact: true })).toBeVisible({ timeout: 5000 })
+    })
+  }
 })

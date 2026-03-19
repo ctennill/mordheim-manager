@@ -245,3 +245,10 @@ create policy "Warband owners manage their territories"
   on warband_territories for all using (
     warband_id in (select id from warbands where owner_id = auth.uid())
   );
+
+-- ── Role grants (required for PostgREST / anon access) ────────────────────────
+
+grant usage on schema public to anon, authenticated;
+
+grant select on all tables in schema public to anon;
+grant select, insert, update, delete on all tables in schema public to authenticated;
