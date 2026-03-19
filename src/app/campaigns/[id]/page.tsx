@@ -207,6 +207,13 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
             <p className="text-sm font-semibold text-foreground">Analytics →</p>
             <p className="text-xs text-muted-foreground mt-0.5">Stats & health indicators</p>
           </Link>
+          <a
+            href={`/api/campaigns/${id}/export`}
+            className="rounded-md border border-border bg-card p-4 hover:border-gold/30 transition-colors block"
+          >
+            <p className="text-sm font-semibold text-foreground">Export Data ↓</p>
+            <p className="text-xs text-muted-foreground mt-0.5">ZIP with CSV files</p>
+          </a>
         </div>
       </section>
 

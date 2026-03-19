@@ -68,7 +68,7 @@ export default async function WarbandPrintPage({ params }: PageProps) {
         >
           ← Back to Warband
         </a>
-        <PrintButton />
+        <PrintButton warbandId={id} />
       </div>
 
       {/* Header */}

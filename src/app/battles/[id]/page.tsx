@@ -130,6 +130,18 @@ export default async function BattlePage({ params }: { params: Promise<{ id: str
           <p className="text-sm text-foreground">{battle.notes}</p>
         </div>
       )}
+
+      {/* Download battle report — only available once result is confirmed */}
+      {resultConfirmed && (
+        <div className="flex justify-end">
+          <a
+            href={`/api/battles/${battleId}/report`}
+            className="text-xs border border-border rounded px-3 py-1.5 text-muted-foreground hover:border-gold/40 hover:text-foreground transition-colors"
+          >
+            Download Battle Report PDF
+          </a>
+        </div>
+      )}
     </div>
   )
 }

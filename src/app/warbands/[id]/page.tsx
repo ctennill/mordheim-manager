@@ -83,6 +83,12 @@ export default async function WarbandPage({ params }: PageProps) {
             >
               Print Roster
             </Link>
+            <a
+              href={`/api/warbands/${id}/pdf`}
+              className="text-xs border border-gold/30 rounded px-2 py-1 text-gold hover:bg-gold/10 transition-colors"
+            >
+              Download PDF
+            </a>
           </div>
         </div>
 
