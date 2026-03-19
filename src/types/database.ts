@@ -321,6 +321,8 @@ export interface Campaign {
   dramatis_personae_enabled: boolean
   magic_items_setting: 'core' | 'all' | 'disabled'
   alignment_rules_enabled: boolean
+  // Faction availability (from migration 004)
+  allowed_faction_ids: string[] | null // null = all allowed
   // Session config
   total_sessions: number | null // null = open-ended
   pairing_method: PairingMethod
