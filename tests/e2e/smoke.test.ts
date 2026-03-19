@@ -34,6 +34,29 @@ test.describe('Authenticated pages', () => {
     await expect(page.getByText(/campaigns/i).first()).toBeVisible()
   })
 
+  test('can create a campaign end-to-end', async ({ page }) => {
+    await page.goto('/campaigns/new')
+    // Step 1 — basics
+    await page.getByPlaceholder(/siege of mordheim/i).fill('E2E Test Campaign')
+    await page.getByRole('button', { name: 'Next', exact: true }).click()
+    // Step 2 — rules (defaults ok)
+    await page.getByRole('button', { name: 'Next', exact: true }).click()
+    // Step 3 — factions (defaults ok)
+    await page.getByRole('button', { name: 'Next', exact: true }).click()
+    // Step 4 — sessions (defaults ok)
+    await page.getByRole('button', { name: 'Next', exact: true }).click()
+    // Step 5 — scoring, submit
+    const [response] = await Promise.all([
+      page.waitForResponse('/api/campaigns'),
+      page.getByRole('button', { name: /create campaign/i }).click(),
+    ])
+    const body = await response.json()
+    expect(response.status(), `API error: ${JSON.stringify(body)}`).toBe(201)
+    // Navigate to the new campaign page and verify it rendered
+    await page.goto(`/campaigns/${body.id}`)
+    await expect(page.getByText(/E2E Test Campaign/i)).toBeVisible({ timeout: 10000 })
+  })
+
   test('new warband page loads', async ({ page }) => {
     await page.goto('/warbands/new')
     await expect(page).not.toHaveURL(/login/)

@@ -36,7 +36,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: campaign } = await supabase
+  const { data: campaign, error: campaignError } = await supabase
     .from('campaigns')
     .select(`
       *,
@@ -47,8 +47,9 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
       )
     `)
     .eq('id', id)
-    .single() as { data: CampaignRow | null }
+    .single() as { data: CampaignRow | null; error: unknown }
 
+  if (campaignError) console.error('Campaign detail fetch error:', campaignError)
   if (!campaign) notFound()
 
   // Visibility check
