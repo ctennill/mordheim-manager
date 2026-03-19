@@ -5,7 +5,7 @@ import { type Campaign, type CampaignPlayer } from '@/types/database'
 
 type PlayerRow = CampaignPlayer & {
   profiles: { display_name: string | null; username: string } | null
-  warbands: { name: string; warband_rating: number } | null
+  warbands: { name: string; warband_rating: number; wins: number; losses: number; draws: number } | null
 }
 
 type CampaignRow = Campaign & { campaign_players: PlayerRow[] }
@@ -41,7 +41,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
       campaign_players(
         id, player_id, warband_id, is_commissioner, joined_at, approval_status,
         profiles:player_id(display_name, username),
-        warbands:warband_id(name, warband_rating)
+        warbands:warband_id(name, warband_rating, wins, losses, draws)
       )
     `)
     .eq('id', id)
@@ -114,40 +114,57 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
 
       {/* Standings / Roster */}
       <section className="space-y-3">
-        <h2 className="text-xs uppercase tracking-widest text-muted-foreground/60">Standings</h2>
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-xs uppercase tracking-widest text-muted-foreground/60">Standings</h2>
+          <Link
+            href={`/campaigns/${id}/standings`}
+            className="text-xs text-muted-foreground hover:text-gold transition-colors"
+          >
+            Full Standings →
+          </Link>
+        </div>
         {approvedPlayers.length === 0 ? (
           <p className="text-sm text-muted-foreground">No approved warbands yet.</p>
         ) : (
-          <div className="rounded-md border border-border overflow-hidden">
+          <div className="rounded-md border border-border overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/20">
-                  <th className="text-left px-4 py-2.5 text-xs uppercase tracking-widest text-muted-foreground font-medium">#</th>
-                  <th className="text-left px-4 py-2.5 text-xs uppercase tracking-widest text-muted-foreground font-medium">Warband</th>
-                  <th className="text-left px-4 py-2.5 text-xs uppercase tracking-widest text-muted-foreground font-medium">Player</th>
-                  <th className="text-right px-4 py-2.5 text-xs uppercase tracking-widest text-muted-foreground font-medium">Rating</th>
+                  {['#', 'Warband', 'Player', 'GP', 'W', 'D', 'L', 'VP', 'Rating'].map((h) => (
+                    <th key={h} className="px-3 py-2.5 text-xs uppercase tracking-widest text-muted-foreground font-medium text-left first:pl-4 last:pr-4 last:text-right">
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {approvedPlayers
-                  .sort((a, b) => (b.warbands?.warband_rating ?? 0) - (a.warbands?.warband_rating ?? 0))
-                  .map((p, idx) => (
+                  .filter((p) => p.warbands)
+                  .map((p) => {
+                    const wb = p.warbands!
+                    const gp = (wb.wins ?? 0) + (wb.draws ?? 0) + (wb.losses ?? 0)
+                    const vp = (wb.wins ?? 0) * campaign.points_win + (wb.draws ?? 0) * campaign.points_draw + (wb.losses ?? 0) * campaign.points_loss
+                    return { p, wb, gp, vp }
+                  })
+                  .sort((a, b) => b.vp - a.vp || b.wb.warband_rating - a.wb.warband_rating)
+                  .map(({ p, wb, gp, vp }, idx) => (
                     <tr key={p.id} className="hover:bg-muted/10 transition-colors">
-                      <td className="px-4 py-3 text-muted-foreground font-mono text-xs">{idx + 1}</td>
-                      <td className="px-4 py-3">
-                        {p.warbands ? (
-                          <Link href={`/warbands/${p.warband_id}`} className="text-foreground hover:text-gold transition-colors">
-                            {p.warbands.name}
-                          </Link>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
+                      <td className="pl-4 pr-3 py-3 text-muted-foreground font-mono text-xs">{idx + 1}</td>
+                      <td className="px-3 py-3">
+                        <Link href={`/warbands/${p.warband_id}`} className="text-foreground hover:text-gold transition-colors">
+                          {wb.name}
+                        </Link>
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground">
+                      <td className="px-3 py-3 text-muted-foreground">
                         {p.profiles?.display_name ?? p.profiles?.username ?? 'Unknown'}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono text-gold">
-                        {p.warbands?.warband_rating ?? '—'}
+                      <td className="px-3 py-3 font-mono text-xs text-muted-foreground">{gp}</td>
+                      <td className="px-3 py-3 font-mono text-xs text-emerald-400">{wb.wins ?? 0}</td>
+                      <td className="px-3 py-3 font-mono text-xs text-muted-foreground">{wb.draws ?? 0}</td>
+                      <td className="px-3 py-3 font-mono text-xs text-red-400/70">{wb.losses ?? 0}</td>
+                      <td className="px-3 py-3 font-mono text-xs font-bold text-gold">{vp}</td>
+                      <td className="pr-4 pl-3 py-3 text-right font-mono text-xs text-muted-foreground">
+                        {wb.warband_rating}
                       </td>
                     </tr>
                   ))}
@@ -155,6 +172,27 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
             </table>
           </div>
         )}
+      </section>
+
+      {/* Campaign navigation */}
+      <section className="space-y-3">
+        <h2 className="text-xs uppercase tracking-widest text-muted-foreground/60">Campaign</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Link
+            href={`/campaigns/${id}/standings`}
+            className="rounded-md border border-border bg-card p-4 hover:border-gold/30 transition-colors"
+          >
+            <p className="text-sm font-semibold text-foreground">Full Standings →</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Rankings, VP, WR</p>
+          </Link>
+          <Link
+            href={`/campaigns/${id}/territories`}
+            className="rounded-md border border-border bg-card p-4 hover:border-gold/30 transition-colors"
+          >
+            <p className="text-sm font-semibold text-foreground">Territory Map →</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Claimed territories</p>
+          </Link>
+        </div>
       </section>
 
       {/* Pending approvals — commissioner only */}
