@@ -4,6 +4,7 @@ import { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { type Warband, type Warrior, type Faction } from '@/types/database'
 import { getFactionTheme } from '@/lib/faction-theme'
+import { WarbandTerritories } from '@/components/territory/warband-territories'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -165,6 +166,18 @@ export default async function WarbandPage({ params }: PageProps) {
               )
             })}
           </div>
+        </section>
+      )}
+
+      {/* Territories */}
+      {warband.campaign_id && (
+        <section className="space-y-3">
+          <WarbandTerritories
+            warbandId={warband.id}
+            campaignId={warband.campaign_id}
+            isOwner={warband.owner_id === user.id}
+            isCommissioner={false}
+          />
         </section>
       )}
     </main>

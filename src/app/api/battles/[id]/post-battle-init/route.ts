@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { type Battle, type Warrior, type Warband } from '@/types/database'
+import { type Battle, type Warrior, type Warband, type Territory, type WarbandTerritory } from '@/types/database'
 
 // GET /api/battles/[id]/post-battle-init
 // Returns all data needed to initialise the post-battle Zustand store
@@ -97,6 +97,22 @@ export async function GET(
     advancementsTaken: w.advancements_taken,
   }))
 
+  // Fetch warband territories (with income formula)
+  const { data: holdings } = await supabase
+    .from('warband_territories')
+    .select('id, territories(*)')
+    .eq('warband_id', myWarband.id) as {
+      data: (Pick<WarbandTerritory, 'id'> & { territories: Territory })[] | null
+    }
+
+  const territories = (holdings ?? [])
+    .filter((h) => h.territories)
+    .map((h) => ({
+      id: h.id,
+      name: h.territories.name,
+      formula: h.territories.income_formula ?? 'none',
+    }))
+
   return NextResponse.json({
     battleId,
     warbandId: myWarband.id,
@@ -106,5 +122,6 @@ export async function GET(
     xpEntries,
     wyrdstoneShards,
     treasuryBefore: myWarband.treasury,
+    territories,
   })
 }

@@ -1,12 +1,13 @@
 'use client'
 
 import { usePostBattle } from '@/store/post-battle'
-import { calcWyrdstoneIncome } from '@/lib/game-rules/wyrdstone-income'
+import { rollTerritoryIncome, formulaLabel } from '@/lib/game-rules/territory-income'
 
 export function StepIncome() {
   const {
     wyrdstoneShards, baseWyrdstoneIncome, miscIncome, totalIncome, treasuryBefore,
-    setMiscIncome,
+    territories, territoryIncome,
+    setMiscIncome, rollTerritoryIncome: setTerritoryRoll,
   } = usePostBattle()
 
   const newTreasury = treasuryBefore + totalIncome
@@ -26,6 +27,44 @@ export function StepIncome() {
               value={`${baseWyrdstoneIncome} gc`}
               highlight
             />
+
+            {territories.map((t) => (
+              <tr key={t.id}>
+                <td className="px-4 py-3">
+                  <div className="text-foreground">{t.name}</div>
+                  <div className="text-xs text-muted-foreground">{formulaLabel(t.formula)}</div>
+                </td>
+                <td className="px-4 py-3 text-right">
+                  {t.rolled !== null ? (
+                    <div className="flex items-center justify-end gap-2">
+                      <span className="font-mono text-gold">{t.rolled} gc</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const result = rollTerritoryIncome(t.formula)
+                          setTerritoryRoll(t.id, result.total)
+                        }}
+                        className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+                      >
+                        reroll
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const result = rollTerritoryIncome(t.formula)
+                        setTerritoryRoll(t.id, result.total)
+                      }}
+                      className="px-3 py-1 rounded border border-border text-muted-foreground hover:border-gold/40 hover:text-foreground transition-colors text-xs"
+                    >
+                      Roll income
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+
             <tr>
               <td className="px-4 py-3">
                 <div className="text-foreground">Misc / Scenario Bonus</div>

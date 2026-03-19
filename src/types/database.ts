@@ -409,6 +409,7 @@ export interface Territory {
   id: string
   name: string
   income_bonus: number
+  income_formula: string // e.g. 'D6*5', '2D6*5', 'none'
   special_rules: string | null
   description: string | null
 }

@@ -21,6 +21,7 @@ interface BattleData {
   }[]
   wyrdstoneShards: number
   treasuryBefore: number
+  territories?: { id: string; name: string; formula: string }[]
 }
 
 export default function PostBattlePage() {

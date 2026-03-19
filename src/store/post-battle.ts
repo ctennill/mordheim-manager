@@ -73,6 +73,9 @@ export interface PostBattleState {
   miscIncome: number
   totalIncome: number
   treasuryBefore: number
+  // Territory income
+  territories: { id: string; name: string; formula: string; rolled: number | null }[]
+  territoryIncome: number
 
   // Step 4 – Exploration
   exploringHeroes: HeroExplorationEntry[]
@@ -99,6 +102,7 @@ export interface PostBattleState {
     xpEntries: WarriorXpEntry[]
     wyrdstoneShards: number
     treasuryBefore: number
+    territories?: { id: string; name: string; formula: string }[]
   }) => void
 
   setStep: (step: PostBattleStep) => void
@@ -113,6 +117,7 @@ export interface PostBattleState {
 
   // Step 3
   setMiscIncome: (amount: number) => void
+  rollTerritoryIncome: (territoryId: string, amount: number) => void
 
   // Step 4
   setHeroExplorationRoll: (warriorId: string, roll: number) => void
@@ -151,6 +156,8 @@ export const usePostBattle = create<PostBattleState>()(
       miscIncome: 0,
       totalIncome: 0,
       treasuryBefore: 0,
+      territories: [],
+      territoryIncome: 0,
       exploringHeroes: [],
       explorationOutcomes: [],
       xpEntries: [],
@@ -158,7 +165,7 @@ export const usePostBattle = create<PostBattleState>()(
       goldSpent: 0,
       spendNotes: '',
 
-      init: ({ battleId, warbandId, side, oaaWarriors, exploringHeroes, xpEntries, wyrdstoneShards, treasuryBefore }) => {
+      init: ({ battleId, warbandId, side, oaaWarriors, exploringHeroes, xpEntries, wyrdstoneShards, treasuryBefore, territories = [] }) => {
         const base = calcWyrdstoneIncome(wyrdstoneShards)
         setState({
           battleId, warbandId, side,
@@ -169,6 +176,8 @@ export const usePostBattle = create<PostBattleState>()(
           miscIncome: 0,
           totalIncome: base,
           treasuryBefore,
+          territories: territories.map((t) => ({ ...t, rolled: null })),
+          territoryIncome: 0,
           oaaWarriors: oaaWarriors.map((w) => ({
             ...w, d66Roll: null, result: null, subRolls: [], resolvedGoldLoss: 0, applied: false,
           })),
@@ -211,8 +220,21 @@ export const usePostBattle = create<PostBattleState>()(
       setMiscIncome: (amount) =>
         setState((s) => ({
           miscIncome: amount,
-          totalIncome: s.baseWyrdstoneIncome + amount,
+          totalIncome: s.baseWyrdstoneIncome + amount + s.territoryIncome,
         })),
+
+      rollTerritoryIncome: (territoryId, amount) =>
+        setState((s) => {
+          const territories = s.territories.map((t) =>
+            t.id === territoryId ? { ...t, rolled: amount } : t
+          )
+          const territoryIncome = territories.reduce((sum, t) => sum + (t.rolled ?? 0), 0)
+          return {
+            territories,
+            territoryIncome,
+            totalIncome: s.baseWyrdstoneIncome + s.miscIncome + territoryIncome,
+          }
+        }),
 
       setHeroExplorationRoll: (warriorId, roll) =>
         setState((s) => ({
@@ -289,6 +311,7 @@ export const usePostBattle = create<PostBattleState>()(
           oaaWarriors: [], captiveChoices: {},
           wyrdstoneShards: 0, baseWyrdstoneIncome: 0, miscIncome: 0,
           totalIncome: 0, treasuryBefore: 0,
+          territories: [], territoryIncome: 0,
           exploringHeroes: [], explorationOutcomes: [],
           xpEntries: [], advancementQueue: [],
           goldSpent: 0, spendNotes: '',
@@ -309,6 +332,8 @@ export const usePostBattle = create<PostBattleState>()(
         miscIncome: s.miscIncome,
         totalIncome: s.totalIncome,
         treasuryBefore: s.treasuryBefore,
+        territories: s.territories,
+        territoryIncome: s.territoryIncome,
         exploringHeroes: s.exploringHeroes,
         explorationOutcomes: s.explorationOutcomes,
         xpEntries: s.xpEntries,
