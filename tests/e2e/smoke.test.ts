@@ -25,7 +25,7 @@ test.describe('Authenticated pages', () => {
   test('warbands page loads', async ({ page }) => {
     await page.goto('/warbands')
     await expect(page).not.toHaveURL(/login/)
-    await expect(page.getByText(/my warbands/i)).toBeVisible()
+    await expect(page.getByRole('heading', { name: /my warbands/i })).toBeVisible()
   })
 
   test('campaigns page loads', async ({ page }) => {

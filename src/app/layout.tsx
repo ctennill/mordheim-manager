@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono, Cinzel } from 'next/font/google'
 import { Providers } from '@/components/providers'
+import { SiteNav } from '@/components/nav/site-nav'
+import { NavGuard } from '@/components/nav/nav-guard'
 import './globals.css'
 
 const geistSans = Geist({
@@ -42,7 +44,12 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        <Providers>{children}</Providers>
+        <NavGuard><SiteNav /></NavGuard>
+        <Providers>
+          <div className="flex-1 flex flex-col">
+            {children}
+          </div>
+        </Providers>
       </body>
     </html>
   )
