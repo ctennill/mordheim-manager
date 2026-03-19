@@ -62,6 +62,8 @@ const TABS = [
   { key: 'stats', label: 'Stats' },
 ]
 
+// Analytics is a separate page, linked from tab nav
+
 export default async function StandingsPage({ params, searchParams }: PageProps) {
   const { id: campaignId } = await params
   const { tab: rawTab } = await searchParams
@@ -140,6 +142,10 @@ export default async function StandingsPage({ params, searchParams }: PageProps)
   const currentWarbandIds = user
     ? players.filter((p) => p.player_id === user.id).map((p) => p.warband_id)
     : []
+
+  const isCommissioner = campaign.commissioner_id === user?.id
+  const isParticipant = players.some((p) => p.player_id === user?.id)
+  const canExport = isCommissioner || isParticipant
 
   let warriorRows: WarriorSelectRow[] = []
   let battleRows: BattleSelectRow[] = []
@@ -261,9 +267,19 @@ export default async function StandingsPage({ params, searchParams }: PageProps)
           <h1 className="font-cinzel text-2xl font-bold text-foreground">
             {campaign.name} — Standings
           </h1>
-          <span className="text-xs px-2.5 py-1 rounded border border-border text-muted-foreground font-mono">
-            Session {campaign.current_session}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs px-2.5 py-1 rounded border border-border text-muted-foreground font-mono">
+              Session {campaign.current_session}
+            </span>
+            {canExport && (
+              <a
+                href={`/api/campaigns/${campaignId}/export`}
+                className="text-xs px-2.5 py-1 rounded border border-border text-muted-foreground hover:border-gold/40 hover:text-foreground transition-colors"
+              >
+                Export CSV
+              </a>
+            )}
+          </div>
         </div>
       </div>
 
@@ -284,6 +300,12 @@ export default async function StandingsPage({ params, searchParams }: PageProps)
             </Link>
           )
         })}
+        <Link
+          href={`/campaigns/${campaignId}/analytics`}
+          className="px-4 py-2.5 text-sm transition-colors border-b-2 -mb-px border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+        >
+          Analytics
+        </Link>
       </nav>
 
       <div>

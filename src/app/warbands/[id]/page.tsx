@@ -70,13 +70,19 @@ export default async function WarbandPage({ params }: PageProps) {
               <p className="text-sm text-muted-foreground italic">"{warband.motto}"</p>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <span className={`text-xs border rounded px-2 py-1 ${theme.borderClass} ${theme.accentClass}`}>
               {theme.icon} {warband.factions?.name}
             </span>
             <span className="text-xs border border-border rounded px-2 py-1 text-muted-foreground capitalize">
               {warband.status}
             </span>
+            <Link
+              href={`/warbands/${id}/print`}
+              className="text-xs border border-border rounded px-2 py-1 text-muted-foreground hover:border-gold/40 hover:text-foreground transition-colors"
+            >
+              Print Roster
+            </Link>
           </div>
         </div>
 

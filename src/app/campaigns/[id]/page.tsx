@@ -2,10 +2,12 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from "@/lib/supabase/server"
 import { type Campaign, type CampaignPlayer } from '@/types/database'
+import { ApprovalActions } from '@/components/campaign/approval-actions'
+import { TreasuryOverride } from '@/components/campaign/treasury-override'
 
 type PlayerRow = CampaignPlayer & {
   profiles: { display_name: string | null; username: string } | null
-  warbands: { name: string; warband_rating: number; wins: number; losses: number; draws: number } | null
+  warbands: { name: string; warband_rating: number; wins: number; losses: number; draws: number; treasury: number } | null
 }
 
 type CampaignRow = Campaign & { campaign_players: PlayerRow[] }
@@ -41,7 +43,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
       campaign_players(
         id, player_id, warband_id, is_commissioner, joined_at, approval_status,
         profiles:player_id(display_name, username),
-        warbands:warband_id(name, warband_rating, wins, losses, draws)
+        warbands:warband_id(name, warband_rating, wins, losses, draws, treasury)
       )
     `)
     .eq('id', id)
@@ -130,7 +132,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/20">
-                  {['#', 'Warband', 'Player', 'GP', 'W', 'D', 'L', 'VP', 'Rating'].map((h) => (
+                  {['#', 'Warband', 'Player', 'GP', 'W', 'D', 'L', 'VP', 'Rating', ...(isCommissioner ? ['Treasury'] : [])].map((h) => (
                     <th key={h} className="px-3 py-2.5 text-xs uppercase tracking-widest text-muted-foreground font-medium text-left first:pl-4 last:pr-4 last:text-right">
                       {h}
                     </th>
@@ -163,9 +165,15 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
                       <td className="px-3 py-3 font-mono text-xs text-muted-foreground">{wb.draws ?? 0}</td>
                       <td className="px-3 py-3 font-mono text-xs text-red-400/70">{wb.losses ?? 0}</td>
                       <td className="px-3 py-3 font-mono text-xs font-bold text-gold">{vp}</td>
-                      <td className="pr-4 pl-3 py-3 text-right font-mono text-xs text-muted-foreground">
+                      <td className={`pl-3 py-3 font-mono text-xs text-muted-foreground ${isCommissioner ? '' : 'pr-4 text-right'}`}>
                         {wb.warband_rating}
                       </td>
+                      {isCommissioner && (
+                        <td className="pr-4 pl-3 py-3 text-right font-mono text-xs text-muted-foreground">
+                          <span>{wb.treasury} gc</span>
+                          <TreasuryOverride campaignId={id} warbandId={p.warband_id} currentTreasury={wb.treasury} />
+                        </td>
+                      )}
                     </tr>
                   ))}
               </tbody>
@@ -177,7 +185,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
       {/* Campaign navigation */}
       <section className="space-y-3">
         <h2 className="text-xs uppercase tracking-widest text-muted-foreground/60">Campaign</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <Link
             href={`/campaigns/${id}/standings`}
             className="rounded-md border border-border bg-card p-4 hover:border-gold/30 transition-colors"
@@ -191,6 +199,13 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
           >
             <p className="text-sm font-semibold text-foreground">Territory Map →</p>
             <p className="text-xs text-muted-foreground mt-0.5">Claimed territories</p>
+          </Link>
+          <Link
+            href={`/campaigns/${id}/analytics`}
+            className="rounded-md border border-border bg-card p-4 hover:border-gold/30 transition-colors"
+          >
+            <p className="text-sm font-semibold text-foreground">Analytics →</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Stats & health indicators</p>
           </Link>
         </div>
       </section>
@@ -208,18 +223,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
                     {p.profiles?.display_name ?? p.profiles?.username ?? 'Unknown player'}
                   </p>
                 </div>
-                <div className="flex gap-2">
-                  <form action={`/api/campaigns/${id}/players/${p.id}/approve`} method="POST">
-                    <button type="submit" className="px-3 py-1 text-xs rounded border border-emerald-500/40 text-emerald-400 hover:bg-emerald-400/10 transition-colors">
-                      Approve
-                    </button>
-                  </form>
-                  <form action={`/api/campaigns/${id}/players/${p.id}/reject`} method="POST">
-                    <button type="submit" className="px-3 py-1 text-xs rounded border border-destructive/40 text-destructive hover:bg-destructive/10 transition-colors">
-                      Reject
-                    </button>
-                  </form>
-                </div>
+                <ApprovalActions campaignId={id} playerId={p.id} />
               </div>
             ))}
           </div>
