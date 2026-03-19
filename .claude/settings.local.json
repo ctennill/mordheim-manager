@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npx shadcn@latest init --defaults)",
+      "Bash(npx shadcn@latest add badge card dialog dropdown-menu form input label select separator sheet skeleton table tabs textarea toast --yes)",
+      "Bash(npx shadcn@latest add badge card dialog dropdown-menu form input label select separator sheet skeleton table tabs textarea sonner --yes)",
+      "Bash(npx shadcn@latest add navigation-menu progress tooltip --yes)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run:*)"
+    ]
+  }
+}
