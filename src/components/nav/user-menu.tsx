@@ -50,6 +50,13 @@ export function UserMenu({ displayName }: UserMenuProps) {
           >
             Dashboard
           </Link>
+          <Link
+            href="/admin"
+            onClick={() => setOpen(false)}
+            className="block px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
+          >
+            Admin
+          </Link>
           <div className="my-1 border-t border-border" />
           <button
             onClick={handleLogout}

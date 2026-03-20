@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: '/warbands', label: 'My Warbands' },
   { href: '/campaigns', label: 'Campaigns' },
   { href: '/factions', label: 'Factions' },
+  { href: '/admin', label: 'Admin' },
 ]
 
 interface MobileMenuProps {
